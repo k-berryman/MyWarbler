@@ -203,8 +203,10 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
+    user_id = session[CURR_USER_KEY]
+    user = User.query.filter_by(id=user_id).first()
 
-    # IMPLEMENT THIS
+    return render_template('/users/detail.html', user=user)
 
 
 @app.route('/users/delete', methods=["POST"])
