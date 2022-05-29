@@ -102,8 +102,9 @@ def login():
 @app.route('/logout')
 def logout():
     """Handle logout of user."""
-
-    # IMPLEMENT THIS
+    session.clear()
+    flash('Goodbye! Logging out now..')
+    return redirect('/')
 
 
 
