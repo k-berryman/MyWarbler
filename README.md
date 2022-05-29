@@ -380,3 +380,33 @@ Now connect the "Edit Profile" button to `/users/edit`
 
 ![edited screen](./pics/part1step5a.png)
 ![edit screen](./pics/part1step5b.png)
+
+### Step Six: Fix Homepage
+
+The homepage for logged-in-users should show the last 100 warbles  **only from the users that the logged-in user is following, and that user**, rather than warbles from  _all_  users.
+
+```
+@app.route('/')
+def homepage():
+    """Show homepage:
+
+    - anon users: no messages
+    - logged in: 100 most recent messages of followed_users
+    """
+
+    if g.user:
+        # get list of following_ids for filtering by id
+        following_ids = [follow.id for follow in g.user.following] + [g.user.id]
+
+        messages = (Message
+                    .query
+                    .filter(Message.user_id.in_(following_ids))
+                    .order_by(Message.timestamp.desc())
+                    .limit(100)
+                    .all())
+
+        return render_template('home.html', messages=messages)
+
+    else:
+        return render_template('home-anon.html')
+```
