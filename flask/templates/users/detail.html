@@ -2,7 +2,9 @@
 
 {% block content %}
 
-<div id="warbler-hero" class="full-width" src="https://media.istockphoto.com/photos/abstract-technology-dotted-digital-wave-background-picture-id1299187436?b=1&k=20&m=1299187436&s=170667a&w=0&h=izqNihZlWl36_V5LekteIU1sFFJc6DUcpDIskNfJlBg="></div>
+<div id="warbler-hero" class="full-width">
+  <img width="1800" height="370" src={{ user.header_image_url }}>
+</div>
 <img src="{{ user.image_url }}" alt="Image for {{ user.username }}" id="profile-avatar">
 <div class="row full-width">
   <div class="container">

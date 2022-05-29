@@ -283,7 +283,10 @@ def logout():
 The profile page for users works, but is missing a few things:
 
 -   the location
+> `{{ user.location }}`
 -   the bio
+> `{{ user.bio }}`
 -   the header image (which should be a background at the top)
+> `<img width="1800" height="370" src={{ user.header_image_url }}>`
 
-Add these.
+Added these. 👍 
