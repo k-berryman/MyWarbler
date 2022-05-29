@@ -281,7 +281,6 @@ def logout():
 ### Step Three: Fix User Profile
 
 The profile page for users works, but is missing a few things:
-
 -   the location
 > `{{ user.location }}`
 -   the bio
@@ -289,4 +288,95 @@ The profile page for users works, but is missing a few things:
 -   the header image (which should be a background at the top)
 > `<img width="1800" height="370" src={{ user.header_image_url }}>`
 
-Added these. 👍 
+Added these in `detail.html` 👍
+
+### Step Four: Fix User Cards
+
+On the followers, following, and list-users pages, the user cards need to show the bio for the users. Add this.
+Added `{{ user.bio }}` in `followers.html`, `following.html`, and `index.html`
+
+### Step Five: Profile Edit
+
+There are buttons throughout the site for editing your profile, but this is unimplemented.
+
+-   It should ensure a user is logged on (you can see how this is done in other routes)
+-   It should show a form with the following:
+    -   username
+    -   email
+    -   image_url
+    -   header_image_url
+    -   bio
+    -   password  _[see below]_
+-   It should check that that password is the valid password for the user—if not, it should flash an error and return to the homepage.
+-   It should edit the user for all of these fields  _except_  password (ie, this is not an area where users can change their passwords–the password is only for checking if it is the current correct password.
+-   On success, it should redirect to the user detail page.
+
+Create `EditUserForm` in `forms.py`
+```
+class EditUserForm(FlaskForm):
+    """Edit User form."""
+
+    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('E-mail', validators=[DataRequired(), Email()])
+    image_url = StringField('(Optional) Image URL')
+    header_image_url = StringField('(Optional) Header Image URL')
+    bio = StringField('(Optional) Bio')
+    password = PasswordField('Password', validators=[Length(min=6)])
+```
+
+Create `edit_user`in `app.py`
+```
+@app.route('/users/edit', methods=["GET","POST"])
+def edit_user():
+    """Edit user."""
+
+    # ensure a user is logged on
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    # show a form with the following: username, email, image_url, header_image_url, bio, password
+    form = EditUserForm()
+
+    # retrieve user info
+    user_id = session[CURR_USER_KEY]
+    user = User.query.filter_by(id=user_id).first()
+
+    if form.validate_on_submit():
+        try:
+            # check that that password is the valid password for the user
+            user = User.authenticate(
+                username=user.username,
+                password=form.password.data,
+            )
+
+        # if not, it should flash an error and return to the homepage.
+        except:
+            flash("Cannot authenticate user", 'danger')
+            return redirect("/")
+
+        # check is user has no value
+        if user == False:
+            flash("Cannot authenticate user", 'danger')
+            return redirect("/")
+
+        # edit the user for all of these fields except password
+        user.username = form.username.data
+        user.email = form.email.data
+        user.image_url = form.image_url.data
+        user.header_image_url = form.header_image_url.data
+        user.bio = form.bio.data
+
+        db.session.commit()
+
+        # on success, redirect to the user detail page
+        return redirect('/users/profile')
+
+    else:
+        return render_template("/users/edit.html", form=form)
+```
+
+Now connect the "Edit Profile" button to `/users/edit`
+
+![edited screen](./pics/part1step5a.png)
+![edit screen](./pics/part1step5b.png)

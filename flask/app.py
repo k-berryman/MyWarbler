@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, redirect, request, flash, session, g
 from sqlalchemy.exc import IntegrityError
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, EditUserForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -207,6 +207,56 @@ def profile():
     user = User.query.filter_by(id=user_id).first()
 
     return render_template('/users/detail.html', user=user)
+
+
+@app.route('/users/edit', methods=["GET","POST"])
+def edit_user():
+    """Edit user."""
+
+    # ensure a user is logged on
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    # show a form with the following: username, email, image_url, header_image_url, bio, password
+    form = EditUserForm()
+
+    # retrieve user info
+    user_id = session[CURR_USER_KEY]
+    user = User.query.filter_by(id=user_id).first()
+
+    if form.validate_on_submit():
+        try:
+            # check that that password is the valid password for the user
+            user = User.authenticate(
+                username=user.username,
+                password=form.password.data,
+            )
+
+        # if not, it should flash an error and return to the homepage.
+        except:
+            flash("Cannot authenticate user", 'danger')
+            return redirect("/")
+
+        # check is user has no value
+        if user == False:
+            flash("Cannot authenticate user", 'danger')
+            return redirect("/")
+
+        # edit the user for all of these fields except password
+        user.username = form.username.data
+        user.email = form.email.data
+        user.image_url = form.image_url.data
+        user.header_image_url = form.header_image_url.data
+        user.bio = form.bio.data
+
+        db.session.commit()
+
+        # on success, redirect to the user detail page
+        return redirect('/users/profile')
+
+    else:
+        return render_template("/users/edit.html", form=form)
 
 
 @app.route('/users/delete', methods=["POST"])
