@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, redirect, request, flash, session, g
 from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, MessageForm, EditUserForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Likes
 
 CURR_USER_KEY = "curr_user"
 
@@ -324,6 +324,42 @@ def messages_destroy(message_id):
     return redirect(f"/users/{g.user.id}")
 
 
+##############################################################################
+# Likes
+
+
+@app.route('/users/add_like/<int:message_id>', methods=["GET", "POST"])
+def toggle_like(message_id):
+    """Add like to message"""
+
+    # if it's the current user's own message, pass
+    msg = Message.query.get(message_id)
+    if msg.user_id == g.user.id:
+        return redirect('/')
+
+    user_likes = g.user.likes
+    if msg in user_likes:
+        g.user.likes = [like for like in user_likes if like != msg]
+        print("LIKED")
+    else:
+        g.user.likes.append(msg)
+        print("UNLIKED")
+
+    db.session.commit()
+
+    return redirect("/")
+
+
+@app.route('/users/<int:user_id>/likes')
+def show_likes(user_id):
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    
+    return render_template('users/likes.html', user=user, likes=user.likes)
+
 
 ##############################################################################
 # Homepage and error pages
@@ -348,7 +384,9 @@ def homepage():
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages)
+        likes = [msg.id for msg in g.user.likes]
+
+        return render_template('home.html', messages=messages, likes=likes)
 
     else:
         return render_template('home-anon.html')
