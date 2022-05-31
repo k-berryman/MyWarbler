@@ -7,3 +7,6 @@ A Twitter clone with a Springboard spin!
 
 ## Part 2
 [Please click here to see Part 2's documentation and answers](./Part2.md)
+
+## Part 3
+[Please click here to see Part 2's documentation and answers](./Part3.md)
